@@ -3,7 +3,12 @@ from __future__ import annotations
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 
-from .const import STORAGE_KEY, STORAGE_VERSION
+from .const import (
+    EVENT_ROUTINE_COMPLETED,
+    EVENT_STATE_CHANGED,
+    STORAGE_KEY,
+    STORAGE_VERSION,
+)
 
 
 class KilianRoutineManager:
@@ -76,7 +81,9 @@ class KilianRoutineManager:
         if state is None:
             return None
 
-        if state["completed"]:
+        was_completed = state["completed"]
+
+        if was_completed:
             return state
 
         if state["step"] >= state["total_steps"]:
@@ -87,11 +94,22 @@ class KilianRoutineManager:
         await self.async_save()
         
         self.hass.bus.async_fire(
-            "kilian_routines_state_changed",
+            EVENT_STATE_CHANGED,
             {
                 "routine_id": routine_id
             },
         )
+
+        if not was_completed and state["completed"]:
+            self.hass.bus.async_fire(
+                EVENT_ROUTINE_COMPLETED,
+                {
+                    "routine_id": routine_id,
+                    "step": state["step"],
+                    "total_steps": state["total_steps"],
+                    "completed": True,
+                },
+            )
 
         return state
 
@@ -111,7 +129,7 @@ class KilianRoutineManager:
 
         await self.async_save()
         self.hass.bus.async_fire(
-            "kilian_routines_state_changed",
+            EVENT_STATE_CHANGED,
             {
                 "routine_id": routine_id
             },

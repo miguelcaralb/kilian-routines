@@ -21,6 +21,19 @@ reset_routine:
       example: poner_mesa
       selector:
         text:
+
+start_routine:
+  name: Iniciar rutina
+  description: Inicia o reanuda visualmente una rutina desde su estado actual.
+  fields:
+    routine_id:
+      name: Rutina
+      description: Identificador de la rutina.
+      required: true
+      example: poner_mesa
+      selector:
+        text:
+
 finish_step:
   name: Terminar paso
   description: Termina el paso actual y solicita la recompensa correspondiente.

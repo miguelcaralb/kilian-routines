@@ -8,7 +8,7 @@ import logging
 from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
 
-from .const import DOMAIN
+from .const import DOMAIN, EVENT_ROUTINE_STARTED
 from .manager import KilianRoutineManager
 from .registry import RoutineRegistry
 from homeassistant.helpers import discovery
@@ -18,6 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 SERVICE_COMPLETE_STEP = "complete_step"
 SERVICE_RESET_ROUTINE = "reset_routine"
 SERVICE_FINISH_STEP = "finish_step"
+SERVICE_START_ROUTINE = "start_routine"
 
 ATTR_ROUTINE_ID = "routine_id"
 
@@ -88,6 +89,41 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
         DOMAIN,
         SERVICE_RESET_ROUTINE,
         handle_reset_routine,
+        schema=vol.Schema({
+            vol.Required(ATTR_ROUTINE_ID): cv.string,
+        }),
+    )
+
+    # ---------------------------------------------------------
+    # Acción: iniciar o reanudar una rutina
+    # ---------------------------------------------------------
+
+    async def handle_start_routine(call: ServiceCall) -> None:
+        routine_id = call.data[ATTR_ROUTINE_ID]
+        routine = registry.get_routine(routine_id)
+        state = manager.get_state(routine_id)
+
+        if routine is None:
+            raise ValueError(f"Rutina desconocida: {routine_id}")
+
+        if state is None:
+            raise ValueError(f"No existe estado para: {routine_id}")
+
+        hass.bus.async_fire(
+            EVENT_ROUTINE_STARTED,
+            {
+                "routine_id": routine_id,
+                "routine_name": routine["name"],
+                "step": state["step"],
+                "total_steps": state["total_steps"],
+                "completed": state["completed"],
+            },
+        )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_START_ROUTINE,
+        handle_start_routine,
         schema=vol.Schema({
             vol.Required(ATTR_ROUTINE_ID): cv.string,
         }),
