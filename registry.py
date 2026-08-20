@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 from pathlib import Path
 from typing import Any
 
@@ -66,6 +67,8 @@ class RoutineRegistry:
                     f"La rutina '{routine_id}' no tiene 'name'"
                 )
 
+            self._validate_reminders(routine_id, routine)
+
             steps = routine.get("steps")
 
             if not isinstance(steps, list) or not steps:
@@ -85,10 +88,83 @@ class RoutineRegistry:
                         f"Paso {index} de '{routine_id}' no tiene 'title'"
                     )
 
-                if "text" not in step:
+                reminder_text = step.get("reminder_text")
+
+                if (
+                    reminder_text is not None
+                    and not isinstance(reminder_text, str)
+                ):
                     raise ValueError(
-                        f"Paso {index} de '{routine_id}' no tiene 'text'"
+                        f"Paso {index} de '{routine_id}' tiene "
+                        "'reminder_text' no válido"
                     )
+
+    def _validate_reminders(
+        self,
+        routine_id: str,
+        routine: dict[str, Any],
+    ) -> None:
+        """Valida la configuración opcional de recordatorios."""
+
+        reminders = routine.get("reminders")
+
+        if reminders is None:
+            return
+
+        if not isinstance(reminders, dict):
+            raise ValueError(
+                f"'reminders' de '{routine_id}' debe ser un diccionario"
+            )
+
+        enabled = reminders.get("enabled")
+
+        if not isinstance(enabled, bool):
+            raise ValueError(
+                f"'reminders.enabled' de '{routine_id}' debe ser booleano"
+            )
+
+        required_fields = (
+            "first_after",
+            "repeat_every",
+            "max_reminders",
+        )
+
+        if enabled:
+            for field in required_fields:
+                if field not in reminders:
+                    raise ValueError(
+                        f"Falta 'reminders.{field}' en '{routine_id}'"
+                    )
+
+        for field in ("first_after", "repeat_every"):
+            if field not in reminders:
+                continue
+
+            value = reminders[field]
+
+            if (
+                isinstance(value, bool)
+                or not isinstance(value, (int, float))
+                or not math.isfinite(value)
+                or value <= 0
+            ):
+                raise ValueError(
+                    f"'reminders.{field}' de '{routine_id}' "
+                    "debe ser un número mayor que 0"
+                )
+
+        if "max_reminders" in reminders:
+            max_reminders = reminders["max_reminders"]
+
+            if (
+                isinstance(max_reminders, bool)
+                or not isinstance(max_reminders, int)
+                or max_reminders <= 0
+            ):
+                raise ValueError(
+                    f"'reminders.max_reminders' de '{routine_id}' "
+                    "debe ser un entero mayor que 0"
+                )
 
     def get_routine(
         self,
@@ -109,6 +185,17 @@ class RoutineRegistry:
             return 0
 
         return len(routine["steps"])
+
+    def get_reminders(
+        self,
+        routine_id: str,
+    ) -> dict[str, Any] | None:
+        routine = self.get_routine(routine_id)
+
+        if routine is None:
+            return None
+
+        return routine.get("reminders")
 
     def get_step(
         self,

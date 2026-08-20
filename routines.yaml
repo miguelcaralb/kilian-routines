@@ -2,6 +2,12 @@ poner_mesa:
   name: "Poner la mesa"
   icon: "mdi:silverware-fork-knife"
   color: "#43c98b"
+
+  reminders:
+    enabled: true
+    first_after: 3
+    repeat_every: 2
+    max_reminders: 3
   
   completion:
     title: "MESA PUESTA"
@@ -41,6 +47,12 @@ preparar_maleta:
   name: "Preparar la maleta"
   icon: "mdi:bag-suitcase"
   color: "#9b51e0"
+
+  reminders:
+    enabled: true
+    first_after: 3
+    repeat_every: 2
+    max_reminders: 3
 
   completion:
     title: "MALETA PREPARADA"

@@ -5,11 +5,13 @@ from pathlib import Path
 import voluptuous as vol
 import logging
 
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN, EVENT_ROUTINE_STARTED
 from .manager import KilianRoutineManager
+from .reminders import RoutineReminderScheduler
 from .registry import RoutineRegistry
 from homeassistant.helpers import discovery
 
@@ -36,6 +38,12 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     manager = KilianRoutineManager(hass)
     await manager.async_load()
 
+    reminder_scheduler = RoutineReminderScheduler(
+        hass,
+        manager,
+        registry,
+    )
+
     # Registrar automáticamente todas las rutinas definidas
     for routine_id in registry.get_all():
         await manager.async_register_routine(
@@ -46,7 +54,17 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     hass.data[DOMAIN] = {
         "manager": manager,
         "registry": registry,
+        "reminder_scheduler": reminder_scheduler,
     }
+
+    @callback
+    def handle_hass_stop(_event) -> None:
+        reminder_scheduler.cancel_all()
+
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP,
+        handle_hass_stop,
+    )
 
     # ---------------------------------------------------------
     # Acción: completar paso
@@ -60,7 +78,11 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
                 f"Rutina desconocida: {routine_id}"
             )
 
-        await manager.async_complete_step(routine_id)
+        reminder_scheduler.cancel(routine_id)
+        state = await manager.async_complete_step(routine_id)
+
+        if state is not None and not state["completed"]:
+            reminder_scheduler.start(routine_id)
 
     hass.services.async_register(
         DOMAIN,
@@ -83,6 +105,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
                 f"Rutina desconocida: {routine_id}"
             )
 
+        reminder_scheduler.cancel(routine_id)
         await manager.async_reset(routine_id)
 
     hass.services.async_register(
@@ -119,6 +142,8 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
                 "completed": state["completed"],
             },
         )
+
+        reminder_scheduler.start(routine_id)
 
     hass.services.async_register(
         DOMAIN,
@@ -161,6 +186,8 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 
         if state["completed"]:
             return
+
+        reminder_scheduler.cancel(routine_id)
 
         rewards = routine.get("rewards", {})
 
