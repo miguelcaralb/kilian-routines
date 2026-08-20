@@ -1,0 +1,65 @@
+poner_mesa:
+  name: "Poner la mesa"
+  icon: "mdi:silverware-fork-knife"
+  color: "#43c98b"
+  
+  completion:
+    title: "MESA PUESTA"
+    text: "¡Buen trabajo!"
+    emoji: "🎉"
+    
+  rewards:
+    between_steps: small
+    completion: large
+
+  steps:
+    - title: "MANTEL"
+      text: "Pon el mantel"
+      emoji: "🟫"
+
+    - title: "PLATOS"
+      text: "Lleva 4 platos"
+      emoji: "🍽️🍽️🍽️🍽️"
+
+    - title: "VASOS"
+      text: "Lleva 4 vasos"
+      emoji: "🥛🥛🥛🥛"
+
+    - title: "CUBIERTOS"
+      text: "Lleva los cubiertos"
+      emoji: "🍴🍴🍴🍴"
+
+    - title: "SERVILLETAS"
+      text: "Lleva las servilletas"
+      emoji: "🧻"
+
+    - title: "AGUA"
+      text: "Lleva el agua"
+      emoji: "🥤"
+      
+preparar_maleta:
+  name: "Preparar la maleta"
+  icon: "mdi:bag-suitcase"
+  color: "#9b51e0"
+
+  completion:
+    title: "MALETA PREPARADA"
+    text: "¡Todo listo!"
+    emoji: "🧳"
+    
+  rewards:
+    between_steps: small
+    completion: large
+
+  steps:
+    - title: "PIJAMA"
+      text: "Guarda el pijama"
+      emoji: "👕"
+
+    - title: "ROPA"
+      text: "Prepara la ropa"
+      emoji: "👖"
+
+    - title: "NECESER"
+      text: "Guarda el neceser"
+      emoji: "🪥"

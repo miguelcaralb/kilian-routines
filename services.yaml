@@ -1,0 +1,34 @@
+complete_step:
+  name: Completar paso
+  description: Avanza un paso en una rutina de Kilian.
+  fields:
+    routine_id:
+      name: Rutina
+      description: Identificador de la rutina.
+      required: true
+      example: poner_mesa
+      selector:
+        text:
+
+reset_routine:
+  name: Reiniciar rutina
+  description: Reinicia una rutina de Kilian desde el primer paso.
+  fields:
+    routine_id:
+      name: Rutina
+      description: Identificador de la rutina.
+      required: true
+      example: poner_mesa
+      selector:
+        text:
+finish_step:
+  name: Terminar paso
+  description: Termina el paso actual y solicita la recompensa correspondiente.
+  fields:
+    routine_id:
+      name: Rutina
+      description: Identificador de la rutina.
+      required: true
+      example: poner_mesa
+      selector:
+        text:
